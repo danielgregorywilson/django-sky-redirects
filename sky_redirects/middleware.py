@@ -1,4 +1,4 @@
-from sky_redirects.models import DomainRedirect
+from sky_redirects.models import DomainRedirect, RegexPathRedirect
 from django.utils.http import urlquote
 from django.http import HttpResponseRedirect
 
@@ -16,3 +16,23 @@ class DomainRedirectMiddleware(object):
                 (request.method == 'GET' and len(request.GET) > 0) and '?%s' % request.GET.urlencode() or ''
             )
             return HttpResponseRedirect(new_uri)
+
+
+class RegexRedirectMiddleware(object):
+    def process_request(self, request):
+        # import pdb; pdb.set_trace()
+        path = request.path
+        domain = request.get_host()
+        redirects = RegexPathRedirect.objects.cached_index()
+        for redir in redirects:
+            regex = redir.compiled_regex
+            matches = regex.match(path)
+            if matches:
+                new_uri = '%s://%s%s%s' % (
+                    'https' if request.is_secure() else 'http',
+                    domain,
+                    redir.redirect_to % matches.groupdict(),
+                    (request.method == 'GET' and len(request.GET) > 0) and '?%s' % request.GET.urlencode() or ''
+                )
+                return HttpResponseRedirect(new_uri)
+
