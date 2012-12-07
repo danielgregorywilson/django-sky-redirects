@@ -31,6 +31,7 @@ class DomainRedirect(CachedTable):
     redirect_to = models.ForeignKey('sites.Site')
     redirect_type = models.CharField(max_length=1024, choices=RedirectType.CHOICES, default=RedirectType.PERMANENT)
     objects = IndexedCachedTableManager(indexed_field='fqdn')
+    path = models.CharField(max_length=1024, blank=True, default='', help_text='(Optional) path to redirect to if matches domain')
 
     def __unicode__(self):
         return '%s Redirect from:\'%s\' to \'%s\'' % (self.get_redirect_type_display(), self.fqdn, self.redirect_to.domain)
@@ -46,6 +47,14 @@ class DomainRedirect(CachedTable):
         #anytime after we change a record, update the cached_index
         DomainRedirect.objects.rebuild_cache()
         return ret
+
+    @property
+    def sub_path(self):
+        path = self.path.strip()
+        if path:
+            return path
+        return '/'
+
 
 class RegexPathRedirect(CachedTable):
     redirect_from = models.CharField(max_length=1024, help_text='Regular Expression format, remember to include `$` if you want an exact match' )

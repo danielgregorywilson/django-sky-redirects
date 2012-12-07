@@ -4,7 +4,7 @@ from sky_redirects.models import DomainRedirect, RegexPathRedirect
 
 
 class DomainRedirectAdmin(admin.ModelAdmin):
-    list_display = ('redirect_from','redirect_to', 'redirect_type')
+    list_display = ('redirect_from','redirect_to','path','redirect_type')
 
     def redirect_from(self, obj):
         return obj.fqdn

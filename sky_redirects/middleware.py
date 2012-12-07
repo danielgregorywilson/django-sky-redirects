@@ -7,12 +7,13 @@ class DomainRedirectMiddleware(object):
     def process_request(self, request):
         host = request.get_host()
         domain_index = DomainRedirect.objects.cached_index()
+        path = domain_redirect.sub_path if domain_redirect.path else urlquote(request.path)
         if host in domain_index:
             domain_redirect = domain_index[host]
             new_uri = '%s://%s%s%s' % (
                 'https' if request.is_secure() else 'http',
                 domain_redirect.redirect_to.domain,
-                urlquote(request.path),
+                path,
                 (request.method == 'GET' and len(request.GET) > 0) and '?%s' % request.GET.urlencode() or ''
             )
             return HttpResponseRedirect(new_uri)
@@ -35,7 +36,7 @@ class RegexRedirectMiddleware(object):
                         'https' if request.is_secure() else 'http',
                         domain,
                         redir.redirect_to % matches.groupdict(),
-                        (request.method == 'GET' and len(request.GET) > 0) and '?%s' % request.GET.urlencode() or ''
+                        (request.method == 'GET' and len(request.GET) > 0) and '?%s' % request.GET.urlencode() or '',
                     )
                     return HttpResponseRedirect(new_uri)
 
